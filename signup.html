@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Sign Up | Brainspeed International</title>
+<style>
+    body { font-family: system-ui; background: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .card { background: white; padding: 32px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 320px; text-align: center; }
+    input, select { width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .brand { color: #2563eb; font-weight: 800; font-size: 20px; margin-bottom: 20px; }
+</style></head>
+<body>
+    <div class="card">
+        <div class="brand">Brainspeed International</div>
+        <h3>Register Account</h3>
+        <input type="text" id="username" placeholder="Choose a Username">
+        <input type="password" id="password" placeholder="Create Password">
+        <select id="role"><option value="student">Student</option><option value="teacher">Teacher</option></select>
+        <button onclick="handleSignup()">Create Account</button>
+        <div style="margin-top:16px;"><a href="/" style="color:#2563eb; text-decoration:none; font-size:14px;">Back to Login</a></div>
+    </div>
+    <script>
+        async function handleSignup() {
+            const username = document.getElementById('username').value, password = document.getElementById('password').value, role = document.getElementById('role').value;
+            const res = await fetch('/api/signup', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username, password, role}) });
+            const data = await res.json();
+            if(data.status === 'success') { alert("Account created!"); window.location.href = '/'; } else alert(data.message);
+        }
+    </script>
+</body></html>

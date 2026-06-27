@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student | Brainspeed International</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        :root { --primary: #4f46e5; --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --border: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; max-width: 900px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
+        .brand { color: var(--primary); font-weight: 800; font-size: 24px; }
+        .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); padding: 30px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 24px; }
+        .tab { padding: 10px 20px; background: #f1f5f9; border-radius: 9999px; cursor: pointer; font-weight: 600; color: #64748b; transition: all 0.3s; }
+        .tab.active { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); }
+        .view { display: none; } .view.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+        th, td { text-align: left; padding: 16px 12px; border-bottom: 1px solid var(--border); }
+        th { background-color: #f8fafc; font-weight: 600; color: #475569; }
+        .btn-confirm { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.3s; }
+        .btn-confirm:hover { background: #059669; }
+        .badge { padding: 6px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+        .badge.pending { background: #fef08a; color: #854d0e; }
+        .badge.confirmed { background: #d1fae5; color: #065f46; }
+        input, textarea { width: 100%; padding: 14px; margin: 8px 0 20px 0; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; box-sizing: border-box; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; }
+        .logout { color: #ef4444; text-decoration: none; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="brand">Brainspeed International</div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <span style="font-weight:600;">Hi, <span id="studentNameDisplay"></span></span>
+            <a class="logout" onclick="localStorage.clear(); window.location.href='/'">Logout</a>
+        </div>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('lessons', this)">My Lessons</div>
+        <div class="tab" onclick="switchTab('profile', this)">Academic Profile</div>
+    </div>
+
+    <div class="card">
+        <!-- Lessons View -->
+        <div id="lessons-view" class="view active">
+            <h3 style="margin-top:0;">Pending & Confirmed Sessions</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Teacher</th><th>Subject</th><th>Hours</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="studentTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Profile View -->
+        <div id="profile-view" class="view">
+            <h3 style="margin-top:0;">My Enrollment Details</h3>
+            <label style="font-weight:600; font-size:14px; color:#475569;">Current Class / Grade Level</label>
+            <input type="text" id="classLevel" placeholder="e.g., SSS 3, Year 10, Grade 12">
+            
+            <label style="font-weight:600; font-size:14px; color:#475569;">Registered Subjects (Comma Separated)</label>
+            <textarea id="subjects" rows="4" placeholder="e.g., Mathematics, Physics, Chemistry"></textarea>
+            
+            <button class="btn-save" onclick="saveProfile()">Save Profile Information</button>
+        </div>
+    </div>
+
+    <script>
+        const studentId = localStorage.getItem('user_id');
+        if(!studentId) window.location.href = '/';
+        document.getElementById('studentNameDisplay').innerText = localStorage.getItem('username').toUpperCase();
+
+        function switchTab(viewId, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            el.classList.add('active'); document.getElementById(viewId + '-view').classList.add('active');
+        }
+
+        async function loadStudentData() {
+            const res = await fetch(`/api/sessions/student/${studentId}`);
+            const sessions = await res.json();
+            const tbody = document.getElementById('studentTableBody'); tbody.innerHTML = '';
+            sessions.forEach(s => {
+                const actionBtn = s.status === 'Pending' ? `<button class="btn-confirm" onclick="confirmSession(${s.id})">Confirm</button>` : `<span style="color:#10b981; font-weight:600;">✓ Verified</span>`;
+                tbody.innerHTML += `<tr><td>${s.teacher_name}</td><td>${s.subject}</td><td><strong>${s.hours}</strong></td><td><span class="badge ${s.status.toLowerCase()}">${s.status}</span></td><td>${actionBtn}</td></tr>`;
+            });
+        }
+
+        async function loadProfile() {
+            const res = await fetch(`/api/profile/${studentId}`);
+            const profile = await res.json();
+            document.getElementById('classLevel').value = profile.class_level || '';
+            document.getElementById('subjects').value = profile.subjects || '';
+        }
+
+        async function saveProfile() {
+            const class_level = document.getElementById('classLevel').value;
+            const subjects = document.getElementById('subjects').value;
+            await fetch(`/api/profile/${studentId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({class_level, subjects}) });
+            alert("Profile successfully updated!");
+        }
+
+        async function confirmSession(id) { await fetch(`/api/sessions/${id}/confirm`, { method: 'PUT' }); loadStudentData(); }
+        
+        loadStudentData();
+        loadProfile();
+    </script>
+</body>
+</html>

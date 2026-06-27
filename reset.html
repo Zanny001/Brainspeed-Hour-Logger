@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reset Password</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background-color: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #0f172a; }
+        .card { background: white; padding: 32px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 320px; }
+        input { width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .links { text-align: center; margin-top: 16px; font-size: 14px; }
+        .links a { color: #2563eb; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 style="margin-top:0; text-align:center;">Reset Password</h2>
+        <input type="text" id="username" placeholder="Your Username">
+        <input type="password" id="newPassword" placeholder="New Password">
+        <button onclick="handleReset()">Update Password</button>
+        <div class="links"><a href="/">Back to Login</a></div>
+    </div>
+    <script>
+        async function handleReset() {
+            const username = document.getElementById('username').value;
+            const new_password = document.getElementById('newPassword').value;
+            if(!username || !new_password) return alert("Fill all fields");
+
+            const res = await fetch('/api/reset-password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, new_password})
+            });
+            const data = await res.json();
+            if(data.status === 'success') {
+                alert("Password updated successfully.");
+                window.location.href = '/';
+            } else {
+                alert(data.message);
+            }
+        }
+    </script>
+</body>
+</html>

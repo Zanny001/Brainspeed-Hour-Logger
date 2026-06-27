@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Login | Brainspeed International</title>
+<style>
+    body { font-family: system-ui; background: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #0f172a; }
+    .card { background: white; padding: 32px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 320px; text-align: center; }
+    input { width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .brand { color: #2563eb; font-weight: 800; font-size: 20px; margin-bottom: 20px; }
+    .links a { color: #2563eb; text-decoration: none; margin: 0 8px; font-size: 14px; }
+</style></head>
+<body>
+    <div class="card">
+        <div class="brand">Brainspeed International</div>
+        <h3>Portal Login</h3>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="handleLogin()">Sign In</button>
+        <div class="links" style="margin-top:16px;">
+            <a href="/signup">Sign Up</a> | <a href="/reset">Forgot Password?</a>
+        </div>
+    </div>
+    <script>
+        async function handleLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username, password}) });
+            const data = await res.json();
+            if(data.status === 'success') {
+                localStorage.setItem('user_id', data.user_id); localStorage.setItem('username', data.username);
+                window.location.href = data.role === 'admin' ? '/admin' : (data.role === 'student' ? '/student' : '/teacher');
+            } else alert(data.message);
+        }
+    </script>
+</body></html>

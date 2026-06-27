@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin | Brainspeed International</title>
+    
+    <!-- Leaflet Map CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        :root { --primary: #4f46e5; --bg: #f8fafc; --text: #0f172a; --border: #e2e8f0; --card-bg: #ffffff; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); padding: 30px; margin-bottom: 20px; }
+        .brand { color: var(--primary); font-weight: 800; font-size: 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 15px; margin-bottom: 24px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+        .tab { padding: 12px 24px; background: #f1f5f9; border-radius: 9999px; cursor: pointer; font-weight: 600; color: #64748b; transition: all 0.3s; font-size: 15px; }
+        .tab.active { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); }
+        .view { display: none; } .view.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--border); }
+        th { background: #f8fafc; color: #475569; font-weight: 600; }
+        button { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: 'Inter'; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
+        .btn-blue { background: var(--primary); color: white; }
+        .btn-green { background: #10b981; color: white; } 
+        .btn-red { background: #ef4444; color: white; }
+        input, select { padding: 12px; margin-right: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; }
+        
+        #map { height: 500px; width: 100%; border-radius: 12px; z-index: 1; border: 1px solid var(--border); }
+        .directory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        .profile-card { border: 1px solid var(--border); padding: 20px; border-radius: 12px; background: #f8fafc; }
+        .role-badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; }
+        .role-student { background: #e0e7ff; color: #3730a3; } .role-teacher { background: #dcfce3; color: #166534; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printableArea, #printableArea * { visibility: visible; }
+            #printableArea { position: absolute; left: 0; top: 0; width: 100%; padding: 40px; }
+            .no-print { display: none !important; }
+            .brand { border: none; font-size: 36px; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="card no-print">
+        <div class="brand">
+            Brainspeed International
+            <a href="#" onclick="localStorage.clear(); window.location.href='/'" style="color:#ef4444; font-size:16px; font-weight:600; text-decoration:none;">System Logout</a>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('sessions', this)">Data Records</div>
+            <div class="tab" onclick="switchTab('map', this)">Live Tracking Map</div>
+            <div class="tab" onclick="switchTab('finance', this)">Finance & Billing</div>
+            <div class="tab" onclick="switchTab('directory', this)">Master Directory</div>
+        </div>
+
+        <!-- Master Records Tab (Now with In/Out times) -->
+        <div id="sessions-view" class="view active">
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>ID</th><th>Teacher</th><th>Student</th><th>Time In</th><th>Time Out</th><th>Hrs</th><th>Status</th><th>Payment</th><th>Action</th></tr></thead>
+                    <tbody id="masterTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Live Map Tab -->
+        <div id="map-view" class="view">
+            <h3 style="margin-top:0;">Session Geolocation Tracking</h3>
+            <p style="color: #64748b; margin-top:0; font-size: 14px;">Displays physical coordinates logged by teachers during check-in.</p>
+            <div id="map"></div>
+        </div>
+
+        <!-- Finance Tab -->
+        <div id="finance-view" class="view">
+            <div style="display:flex; gap: 20px; flex-wrap: wrap;">
+                <div style="flex:1; min-width: 300px; border: 1px solid var(--border); padding: 20px; border-radius: 12px; background: #f8fafc;">
+                    <h3 style="margin-top:0;">Generate Invoice / Receipt</h3>
+                    <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                        <select id="userType" onchange="loadFinanceDropdown()" style="flex:1;"><option value="student">Bill a Student</option><option value="teacher">Pay a Teacher</option></select>
+                        <select id="targetUser" onchange="calculateFinance()" style="flex:2;"><option value="">-- Select Person --</option></select>
+                    </div>
+                    <label style="font-weight:600; font-size:14px; color:#475569; display:block; margin-bottom:5px;">Rate per Hour (₦):</label>
+                    <input type="number" id="rateInput" value="5000" oninput="calculateFinance()" style="width:100%; margin-bottom:20px; box-sizing:border-box;">
+                    
+                    <div id="financeResult" style="padding: 20px; background:white; border-radius:12px; display:none; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                        <h4 style="margin-top:0;">Financial Summary</h4>
+                        <p>Total Unpaid/Pending Sessions: <strong id="sumSessions">0</strong></p>
+                        <p>Total Rounded Hours: <strong id="sumHours">0</strong> hrs</p>
+                        <p style="font-size: 24px; color: var(--primary); font-weight:800; margin: 15px 0;">Total Amount: ₦<span id="sumAmount">0</span></p>
+                        
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="btn-blue" onclick="window.print()">Print PDF</button>
+                            <button class="btn-green" onclick="shareWhatsApp()">WhatsApp</button>
+                            <button class="btn-blue" onclick="shareEmail()">Email</button>
+                        </div>
+                        <div id="markPaidContainer" style="margin-top:15px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Directory Tab -->
+        <div id="directory-view" class="view">
+            <h3 style="margin-top:0; margin-bottom: 5px;">User Profiles & Database</h3>
+            <div class="directory-grid" id="directoryGrid"></div>
+        </div>
+    </div>
+
+    <!-- Hidden Printable Area -->
+    <div id="printableArea" style="display:none; background:white;">
+        <h1 class="brand" style="text-align:center; color:#0f172a; margin-bottom:5px;">Brainspeed International</h1>
+        <h3 id="docTitle" style="text-align:center; color:#64748b; margin-top:0;">Official Invoice</h3>
+        <hr style="border: 1px solid #e2e8f0; margin: 20px 0;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <div><p><strong>Name:</strong> <span id="printName"></span></p></div>
+            <div style="text-align:right;">
+                <p><strong>Date:</strong> <span id="printDate"></span></p>
+                <p><strong>Rate Applied:</strong> ₦<span id="printRate"></span> / hr</p>
+            </div>
+        </div>
+        <table style="width:100%; border:1px solid #e2e8f0; margin-top:20px;">
+            <thead style="background:#f1f5f9;"><tr><th>Date</th><th>Subject</th><th>Exact Hrs</th><th>Rounded Hrs</th></tr></thead>
+            <tbody id="printTableBody"></tbody>
+        </table>
+        <h2 style="text-align:right; margin-top:30px; color:#0f172a;">Total Due: ₦<span id="printTotal"></span></h2>
+        <p style="text-align:center; margin-top:60px; font-style:italic; color:#64748b;">Thank you for choosing Brainspeed International.</p>
+    </div>
+
+    <script>
+        let currentFinanceData = [];
+        let map;
+        let markerGroup;
+
+        function initMap() {
+            if (!map) {
+                // Defaulting view to Nigeria (Abuja coords)
+                map = L.map('map').setView([9.0820, 8.6753], 6); 
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                markerGroup = L.layerGroup().addTo(map);
+            }
+        }
+
+        function switchTab(viewId, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            el.classList.add('active'); document.getElementById(viewId + '-view').classList.add('active');
+            
+            if(viewId === 'finance') { loadFinanceDropdown(); document.getElementById('printableArea').style.display='block'; }
+            else { document.getElementById('printableArea').style.display='none'; }
+            
+            if(viewId === 'sessions') loadAdminData();
+            if(viewId === 'directory') loadDirectory();
+            if(viewId === 'map') {
+                initMap();
+                setTimeout(() => map.invalidateSize(), 200); // Fixes Leaflet render bug when container is initially hidden
+                loadAdminData(); // Populates markers
+            }
+        }
+
+        function formatTime(isoString) {
+            if (!isoString) return 'N/A';
+            const date = new Date(isoString);
+            return isNaN(date) ? isoString.split(', ')[1] || isoString : date.toLocaleString();
+        }
+
+        async function loadAdminData() {
+            const res = await fetch('/api/sessions'); const sessions = await res.json();
+            const tbody = document.getElementById('masterTable'); tbody.innerHTML = '';
+            
+            if(markerGroup) markerGroup.clearLayers();
+
+            sessions.forEach(s => {
+                // Populate Table with Time In/Out
+                tbody.innerHTML += `<tr>
+                    <td>#${s.id}</td><td>${s.teacher_name}</td><td>${s.student_name}</td>
+                    <td>${formatTime(s.check_in_time)}</td><td>${formatTime(s.check_out_time)}</td>
+                    <td><strong>${s.hours}</strong></td><td>${s.status}</td><td>${s.payment_status}</td>
+                    <td><button class="btn-red" onclick="fetch('/api/sessions/${s.id}',{method:'DELETE'}).then(loadAdminData)">Del</button></td>
+                </tr>`;
+
+                // Populate Map Markers if GPS coords exist
+                if(s.lat && s.lng && s.lat !== 0 && markerGroup) {
+                    const popupText = `<strong>${s.teacher_name.toUpperCase()}</strong><br>Teaching: ${s.student_name.toUpperCase()}<br>Subject: ${s.subject}`;
+                    L.marker([s.lat, s.lng]).bindPopup(popupText).addTo(markerGroup);
+                }
+            });
+        }
+
+        async function loadDirectory() {
+            const res = await fetch('/api/users'); const users = await res.json();
+            const grid = document.getElementById('directoryGrid'); grid.innerHTML = '';
+            users.forEach(u => {
+                const isStudent = u.role === 'student';
+                const roleClass = isStudent ? 'role-student' : 'role-teacher';
+                grid.innerHTML += `
+                    <div class="profile-card">
+                        <div class="role-badge ${roleClass}">${u.role}</div>
+                        <h3 style="margin: 0 0 15px 0;">${u.username.toUpperCase()}</h3>
+                        <p style="font-size:14px; margin:5px 0;"><strong>${isStudent ? 'Class' : 'Expertise'}:</strong> ${isStudent ? u.class_level : u.subjects}</p>
+                        <button class="btn-red" style="width:100%; margin-top:10px;" onclick="deleteUser(${u.id})">Remove</button>
+                    </div>
+                `;
+            });
+        }
+        
+        async function deleteUser(id) { if(confirm("Permanently delete user?")) { await fetch(`/api/users/${id}`, {method: 'DELETE'}); loadDirectory(); loadAdminData(); } }
+        async function loadFinanceDropdown() {
+            const type = document.getElementById('userType').value;
+            document.getElementById('rateInput').value = type === 'student' ? '5000' : '3000';
+            const res = await fetch('/api/users/' + type); const users = await res.json();
+            const select = document.getElementById('targetUser'); select.innerHTML = '<option value="">-- Select Person --</option>';
+            users.forEach(u => select.innerHTML += `<option value="${u.id}">${u.username.toUpperCase()}</option>`);
+        }
+        async function calculateFinance() {
+            const targetId = document.getElementById('targetUser').value; const type = document.getElementById('userType').value; const rate = parseFloat(document.getElementById('rateInput').value) || 0;
+            if(!targetId) return;
+            const res = await fetch(`/api/sessions/${type}/${targetId}`); const allSessions = await res.json();
+            currentFinanceData = allSessions.filter(s => s.payment_status === 'Unpaid');
+            if(type === 'teacher') currentFinanceData = currentFinanceData.filter(s => s.status === 'Confirmed');
+
+            let totalRounded = 0; const printTbody = document.getElementById('printTableBody'); printTbody.innerHTML = '';
+            currentFinanceData.forEach(s => {
+                const rounded = Math.round(parseFloat(s.hours)); totalRounded += rounded;
+                printTbody.innerHTML += `<tr><td>${formatTime(s.check_in_time).split(',')[0]}</td><td>${s.subject}</td><td>${s.hours}</td><td>${rounded}</td></tr>`;
+            });
+            const totalAmount = totalRounded * rate;
+            document.getElementById('sumSessions').innerText = currentFinanceData.length; document.getElementById('sumHours').innerText = totalRounded; document.getElementById('sumAmount').innerText = totalAmount.toLocaleString();
+            document.getElementById('financeResult').style.display = 'block';
+
+            document.getElementById('docTitle').innerText = type === 'student' ? 'Official Invoice' : 'Payment Receipt';
+            document.getElementById('printName').innerText = document.getElementById('targetUser').options[document.getElementById('targetUser').selectedIndex].text;
+            document.getElementById('printDate').innerText = new Date().toLocaleDateString(); document.getElementById('printRate').innerText = rate.toLocaleString(); document.getElementById('printTotal').innerText = totalAmount.toLocaleString();
+
+            const markPaidDiv = document.getElementById('markPaidContainer');
+            if(type === 'teacher' && currentFinanceData.length > 0) markPaidDiv.innerHTML = `<button class="btn-green" style="width:100%" onclick="markAllPaid()">Mark Paid in DB</button>`; else markPaidDiv.innerHTML = '';
+        }
+        async function markAllPaid() { if(!confirm("Mark paid?")) return; for(let s of currentFinanceData) { await fetch(`/api/sessions/${s.id}/pay`, {method:'PUT'}); } alert("Done!"); calculateFinance(); loadAdminData(); }
+        function generateMessage() { return `*Brainspeed International*\nHello ${document.getElementById('printName').innerText},\nTotal Hours: ${document.getElementById('sumHours').innerText}\nAmount: ₦${document.getElementById('sumAmount').innerText}`; }
+        function shareWhatsApp() { window.open(`https://wa.me/?text=${encodeURIComponent(generateMessage())}`, '_blank'); }
+        function shareEmail() { window.location.href = `mailto:?subject=Brainspeed International Document&body=${encodeURIComponent(generateMessage())}`; }
+        
+        loadAdminData();
+    </script>
+</body></html>

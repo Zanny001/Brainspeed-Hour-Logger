@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher | Brainspeed International</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        :root { --primary: #4f46e5; --danger: #ef4444; --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --border: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; max-width: 700px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
+        .brand { color: var(--primary); font-weight: 800; font-size: 24px; }
+        .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); padding: 30px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 24px; }
+        .tab { padding: 10px 20px; background: #f1f5f9; border-radius: 9999px; cursor: pointer; font-weight: 600; color: #64748b; transition: all 0.3s; }
+        .tab.active { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); }
+        .view { display: none; } .view.active { display: block; }
+        select, input, textarea { width: 100%; padding: 14px; margin: 8px 0 20px 0; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; box-sizing: border-box; }
+        button { padding: 16px; font-weight: 600; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; transition: opacity 0.3s; font-size: 16px; }
+        button:hover { opacity: 0.9; }
+        #checkInBtn { background: var(--primary); } #checkOutBtn { background: var(--danger); display: none; }
+        .btn-save { background: #10b981; }
+        .status-box { margin-top: 16px; padding: 20px; border-radius: 8px; background: #e0e7ff; color: #3730a3; display: none; border: 1px solid #c7d2fe; }
+        label { font-weight: 600; font-size: 14px; color: #475569; }
+        .logout { color: var(--danger); text-decoration: none; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="brand">Brainspeed International</div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <span style="font-weight:600;"><span id="teacherName"></span></span>
+            <a class="logout" onclick="localStorage.clear(); window.location.href='/'">Logout</a>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('logger', this)">Log Session</div>
+        <div class="tab" onclick="switchTab('profile', this)">Professional Profile</div>
+    </div>
+    
+    <div class="card">
+        <!-- Logger View -->
+        <div id="logger-view" class="view active">
+            <h3 style="margin-top:0;">Record Class Attendance</h3>
+            <label>Select Student</label>
+            <select id="studentId"><option value="">-- Loading Students... --</option></select>
+
+            <label>Subject</label>
+            <select id="subjectTaught">
+                <option value="Mathematics">Mathematics</option><option value="English Language">English Language</option>
+                <option value="Physics">Physics</option><option value="Chemistry">Chemistry</option><option value="Biology">Biology</option>
+                <option value="Basic Science">Basic Science</option><option value="Economics">Economics</option>
+                <option value="Government/History">Government/History</option><option value="Geography">Geography</option>
+                <option value="Computer Science/ICT">Computer Science/ICT</option><option value="Other">Other</option>
+            </select>
+
+            <button id="checkInBtn" onclick="initiateCheckIn()">Check In Now (GPS Tracked)</button>
+            <button id="checkOutBtn" onclick="handleCheckOut()">End Session & Submit</button>
+
+            <div id="statusBox" class="status-box">
+                <div style="font-size:18px; font-weight:800; margin-bottom:5px;">⏳ Active Lesson in Progress</div>
+                Started at: <span id="timeDisplay" style="font-weight:600;"></span>
+            </div>
+        </div>
+
+        <!-- Profile View -->
+        <div id="profile-view" class="view">
+            <h3 style="margin-top:0;">My Teaching Profile</h3>
+            <label>Expertise / Subjects Taught</label>
+            <input type="text" id="profSubjects" placeholder="e.g., Advanced Mathematics, Physics">
+            
+            <label>Professional Bio / Qualifications</label>
+            <textarea id="profBio" rows="4" placeholder="e.g., B.Sc Engineering, 5 years teaching experience..."></textarea>
+            
+            <button class="btn-save" onclick="saveProfile()">Update Profile</button>
+        </div>
+    </div>
+
+    <script>
+        const tid = localStorage.getItem('user_id'); 
+        if(!tid) window.location.href='/';
+        document.getElementById('teacherName').innerText = localStorage.getItem('username').toUpperCase();
+        let activeSession = JSON.parse(localStorage.getItem('active_lesson')) || null;
+        
+        function switchTab(viewId, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            el.classList.add('active'); document.getElementById(viewId + '-view').classList.add('active');
+        }
+
+        async function loadStudents() {
+            const res = await fetch('/api/users/student'); const students = await res.json();
+            const select = document.getElementById('studentId'); select.innerHTML = '<option value="">-- Select Student --</option>';
+            students.forEach(st => select.innerHTML += `<option value="${st.id}">${st.username.toUpperCase()}</option>`);
+            updateUI();
+        }
+
+        async function loadProfile() {
+            const res = await fetch(`/api/profile/${tid}`); const profile = await res.json();
+            document.getElementById('profSubjects').value = profile.subjects || '';
+            document.getElementById('profBio').value = profile.bio || '';
+        }
+
+        async function saveProfile() {
+            const subjects = document.getElementById('profSubjects').value;
+            const bio = document.getElementById('profBio').value;
+            await fetch(`/api/profile/${tid}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({subjects, bio}) });
+            alert("Profile successfully updated!");
+        }
+
+        function updateUI() {
+            if (activeSession) {
+                document.getElementById('checkInBtn').style.display = 'none'; document.getElementById('checkOutBtn').style.display = 'block';
+                document.getElementById('statusBox').style.display = 'block'; document.getElementById('timeDisplay').innerText = new Date(activeSession.check_in_time).toLocaleTimeString();
+                document.getElementById('studentId').value = activeSession.student_id; document.getElementById('studentId').disabled = true; document.getElementById('subjectTaught').disabled = true;
+            } else {
+                document.getElementById('checkInBtn').style.display = 'block'; document.getElementById('checkOutBtn').style.display = 'none';
+                document.getElementById('statusBox').style.display = 'none'; document.getElementById('studentId').disabled = false; document.getElementById('subjectTaught').disabled = false;
+            }
+        }
+
+        function initiateCheckIn() {
+            if(!document.getElementById('studentId').value) return alert("Select student");
+            document.getElementById('checkInBtn').innerText = "Locating GPS...";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => proceedCheckIn(pos.coords.latitude, pos.coords.longitude),
+                    (err) => proceedCheckIn(0, 0) // proceed anyway if denied
+                );
+            } else proceedCheckIn(0, 0);
+        }
+
+        function proceedCheckIn(lat, lng) {
+            activeSession = { teacher_id: tid, student_id: document.getElementById('studentId').value, subject: document.getElementById('subjectTaught').value, check_in_time: new Date().toISOString(), lat: lat, lng: lng };
+            localStorage.setItem('active_lesson', JSON.stringify(activeSession)); updateUI();
+            document.getElementById('checkInBtn').innerText = "Check In Now (GPS Tracked)";
+        }
+
+        async function handleCheckOut() {
+            const end = new Date(), start = new Date(activeSession.check_in_time);
+            const res = await fetch('/api/sessions', { method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({...activeSession, check_out_time: end.toLocaleString(), check_in_time: start.toLocaleString(), hours: ((end - start) / 3600000).toFixed(2)})
+            });
+            if(res.ok) { alert("Session submitted!"); localStorage.removeItem('active_lesson'); activeSession = null; updateUI(); }
+        }
+        
+        loadStudents(); loadProfile();
+    </script>
+</body>
+</html>

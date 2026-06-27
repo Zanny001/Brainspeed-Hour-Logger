@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor Attendance & Hour Logger</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        h1, h2 { margin-top: 0; color: var(--text); }
+        label { font-weight: 600; font-size: 14px; display: block; margin-top: 12px; }
+        input[type="text"], select {
+            width: 100%; padding: 12px; margin-top: 4px; margin-bottom: 8px;
+            border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 16px;
+        }
+        button {
+            padding: 14px 24px; font-size: 16px; font-weight: 600; color: white;
+            border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.2s;
+            width: 100%; margin-top: 16px;
+        }
+        #checkInBtn { background-color: var(--primary); }
+        #checkInBtn:hover { background-color: var(--primary-hover); }
+        #checkOutBtn { background-color: var(--danger); display: none; }
+        #checkOutBtn:hover { background-color: var(--danger-hover); }
+        .status-box { margin-top: 16px; padding: 16px; border-radius: 6px; background-color: #f1f5f9; display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); }
+        th { background-color: #f8fafc; font-weight: 600; white-space: nowrap; }
+        .location-link { color: var(--primary); text-decoration: none; }
+        .location-link:hover { text-decoration: underline; }
+        @media (max-width: 768px) { th, td { padding: 8px; font-size: 12px; } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Tutor Attendance Logger</h1>
+        <p>Enter session details before checking in.</p>
+        
+        <label for="teacherName">Teacher Name</label>
+        <input type="text" id="teacherName" placeholder="E.g., Jane Doe">
+        <label for="studentName">Student Name</label>
+        <input type="text" id="studentName" placeholder="E.g., John Smith">
+        <label for="subjectTaught">Subject</label>
+        <select id="subjectTaught">
+            <option value="">-- Select a subject --</option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="English">English</option>
+            <option value="Basic Science">Basic Science</option>
+            <option value="Physics">Physics</option>
+            <option value="Chemistry">Chemistry</option>
+            <option value="Biology">Biology</option>
+            <option value="History">History</option>
+            <option value="Geography">Geography</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Economics">Economics</option>
+            <option value="Other">Other</option>
+        </select>
+        <button id="checkInBtn" onclick="handleCheckIn()">Check In</button>
+        <button id="checkOutBtn" onclick="handleCheckOut()">Check Out</button>
+        <div id="statusBox" class="status-box">
+            <strong>Status:</strong> Checked in at <span id="checkInTimeDisplay"></span><br>
+            <small>Session: <span id="sessionDetailsDisplay"></span></small><br>
+            <small>Location: <span id="checkInLocDisplay"></span></small>
+        </div>
+    </div>
+    <div class="card">
+        <h2>Billable Hours Log</h2>
+        <div style="overflow-x: auto;">
+            <table id="logTable">
+                <thead>
+                    <tr>
+                        <th>Date</th><th>Teacher</th><th>Student</th><th>Subject</th>
+                        <th>In / Out</th><th>Hours</th><th>Map</th>
+                    </tr>
+                </thead>
+                <tbody id="logBody"></tbody>
+            </table>
+        </div>
+        <button onclick="clearAllData()" style="background-color: #64748b; margin-top: 24px;">Clear All Records</button>
+    </div>
+    <script>
+        let currentSession = JSON.parse(localStorage.getItem('tutorCurrentSession')) || null;
+        let sessionLogs = JSON.parse(localStorage.getItem('tutorSessionLogs')) || [];
+        const checkInBtn = document.getElementById('checkInBtn');
+        const checkOutBtn = document.getElementById('checkOutBtn');
+        const statusBox = document.getElementById('statusBox');
+        const logBody = document.getElementById('logBody');
+        const teacherInput = document.getElementById('teacherName');
+        const studentInput = document.getElementById('studentName');
+        const subjectInput = document.getElementById('subjectTaught');
+
+        function updateUI() {
+            if (currentSession) {
+                checkInBtn.style.display = 'none'; checkOutBtn.style.display = 'block'; statusBox.style.display = 'block';
+                document.getElementById('checkInTimeDisplay').innerText = new Date(currentSession.checkInTime).toLocaleTimeString();
+                document.getElementById('sessionDetailsDisplay').innerText = `${currentSession.teacher} tutoring ${currentSession.student} (${currentSession.subject})`;
+                document.getElementById('checkInLocDisplay').innerText = `${currentSession.lat.toFixed(4)}, ${currentSession.lng.toFixed(4)}`;
+                teacherInput.value = currentSession.teacher; studentInput.value = currentSession.student; subjectInput.value = currentSession.subject;
+                teacherInput.disabled = true; studentInput.disabled = true; subjectInput.disabled = true;
+            } else {
+                checkInBtn.style.display = 'block'; checkOutBtn.style.display = 'none'; statusBox.style.display = 'none';
+                teacherInput.disabled = false; studentInput.disabled = false; subjectInput.disabled = false;
+            }
+            renderLogs();
+        }
+
+        function getLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) reject('Geolocation is not supported by your browser');
+                else navigator.geolocation.getCurrentPosition((position) => resolve(position.coords), (error) => reject('Unable to retrieve location.'));
+            });
+        }
+
+        async function handleCheckIn() {
+            const teacher = teacherInput.value.trim(); const student = studentInput.value.trim(); const subject = subjectInput.value;
+            if (!teacher || !student || !subject) return alert("Please fill in all fields.");
+            try {
+                checkInBtn.innerText = 'Acquiring Location...'; checkInBtn.disabled = true;
+                const coords = await getLocation();
+                currentSession = { teacher, student, subject, checkInTime: new Date().toISOString(), lat: coords.latitude, lng: coords.longitude };
+                localStorage.setItem('tutorCurrentSession', JSON.stringify(currentSession));
+                updateUI();
+            } catch (error) { alert(error); } finally { checkInBtn.innerText = 'Check In'; checkInBtn.disabled = false; }
+        }
+
+        async function handleCheckOut() {
+            if (!currentSession) return;
+            try {
+                checkOutBtn.innerText = 'Verifying Location...'; checkOutBtn.disabled = true;
+                const coords = await getLocation(); const end = new Date(); const start = new Date(currentSession.checkInTime);
+                const hours = ((end - start) / (1000 * 60 * 60)).toFixed(2);
+                sessionLogs.unshift({
+                    teacher: currentSession.teacher, student: currentSession.student, subject: currentSession.subject,
+                    date: start.toLocaleDateString(), checkInTime: start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    checkOutTime: end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), hours: hours,
+                    lat: currentSession.lat, lng: currentSession.lng, confirmed: false
+                });
+                localStorage.setItem('tutorSessionLogs', JSON.stringify(sessionLogs));
+                currentSession = null; localStorage.removeItem('tutorCurrentSession');
+                teacherInput.value = ''; studentInput.value = ''; subjectInput.value = '';
+                updateUI();
+            } catch (error) { alert(error); } finally { checkOutBtn.innerText = 'Check Out'; checkOutBtn.disabled = false; }
+        }
+
+        function renderLogs() {
+            logBody.innerHTML = '';
+            sessionLogs.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${log.date}</td><td>${log.teacher}</td><td>${log.student}</td><td>${log.subject}</td>
+                    <td>${log.checkInTime} - ${log.checkOutTime}</td><td><strong>${log.hours}</strong></td>
+                    <td><a href="https://www.google.com/maps/search/?api=1&query=$${log.lat},${log.lng}" target="_blank" class="location-link">Map</a></td>`;
+                logBody.appendChild(tr);
+            });
+        }
+
+        function clearAllData() {
+            if(confirm("Are you sure you want to permanently delete all session logs?")) {
+                localStorage.removeItem('tutorSessionLogs'); sessionLogs = []; renderLogs();
+            }
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
