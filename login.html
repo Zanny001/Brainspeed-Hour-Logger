@@ -1,28 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><title>Login | Brainspeed International</title>
-<style>
-    body { font-family: system-ui; background: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #0f172a; }
-    .card { background: white; padding: 32px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 320px; text-align: center; }
-    input { width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
-    button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    .brand { color: #2563eb; font-weight: 800; font-size: 20px; margin-bottom: 20px; }
-    .links a { color: #2563eb; text-decoration: none; margin: 0 8px; font-size: 14px; }
-</style></head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Brainspeed International</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #635BFF;
+            --primary-hover: #0A2540;
+            --bg: #F6F9FC;
+            --card-bg: #FFFFFF;
+            --text: #1A1F36;
+            --border: #E3E8EE;
+            --text-muted: #4F566B;
+        }
+        [data-theme="dark"] {
+            --primary: #7770FF;
+            --primary-hover: #FFFFFF;
+            --bg: #0A2540;
+            --card-bg: #102A43;
+            --text: #F4F6F8;
+            --border: #243B53;
+            --text-muted: #9FB3C8;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; color: var(--text); transition: background 0.3s; }
+        .card { background: var(--card-bg); padding: 40px; border-radius: 16px; box-shadow: 0 15px 35px rgba(50,50,93,0.05); width: 100%; max-width: 360px; text-align: center; border: 1px solid var(--border); }
+        .brand { color: var(--primary); font-weight: 800; font-size: 24px; margin-bottom: 8px; letter-spacing: -0.5px; }
+        h3 { font-size: 16px; font-weight: 500; color: var(--text-muted); margin-bottom: 24px; }
+        input { width: 100%; padding: 14px; margin-bottom: 16px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 8px; box-sizing: border-box; outline: none; transition: all 0.2s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99,91,255,0.15); }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.2s; }
+        button:hover { background: var(--primary-hover); color: <?php echo $theme=='dark'?'#0A2540':'#fff'; ?>; }
+        .links { margin-top: 24px; font-size: 14px; }
+        .links a { color: var(--primary); text-decoration: none; font-weight: 500; margin: 0 8px; }
+        .theme-switch { position: absolute; top: 20px; right: 20px; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; color: var(--text); cursor: pointer; font-weight: 600; font-size: 13px; }
+    </style>
+</head>
 <body>
+    <button class="theme-switch" onclick="toggleTheme()">🌓 Theme</button>
     <div class="card">
         <div class="brand">Brainspeed International</div>
-        <h3>Portal Login</h3>
+        <h3>Portal Management System</h3>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
         <button onclick="handleLogin()">Sign In</button>
-        <div class="links" style="margin-top:16px;">
-            <a href="/signup">Sign Up</a> | <a href="/reset">Forgot Password?</a>
+        <div class="links">
+            <a href="/signup">Sign Up</a> • <a href="/reset">Reset Security</a>
         </div>
     </div>
     <script>
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('login-theme', target);
+        }
+        if(localStorage.getItem('login-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+
         async function handleLogin() {
-            const username = document.getElementById('username').value;
+            // Standardizing downcase entry to handle case-insensitivity updates smoothly
+            const username = document.getElementById('username').value.toLowerCase().trim();
             const password = document.getElementById('password').value;
             const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username, password}) });
             const data = await res.json();
@@ -32,4 +70,6 @@
             } else alert(data.message);
         }
     </script>
-</body></html>
+</body>
+</html>
+

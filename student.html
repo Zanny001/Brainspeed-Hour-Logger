@@ -4,41 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Portal | Brainspeed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        :root { --primary: #2563eb; --primary-hover: #1d4ed8; --bg-gradient: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); --card-bg: rgba(255, 255, 255, 0.95); --text: #0f172a; --text-muted: #475569; --border: #e2e8f0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-gradient); color: var(--text); padding: 3vw; min-height: 100vh; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        :root {
+            --primary: #635BFF;
+            --primary-hover: #0A2540;
+            --bg: #F6F9FC;
+            --card-bg: #FFFFFF;
+            --text: #1A1F36;
+            --text-muted: #4F566B;
+            --border: #E3E8EE;
+            --table-header: #FAFAFA;
+        }
+        [data-theme="dark"] {
+            --primary: #7770FF;
+            --primary-hover: #FFFFFF;
+            --bg: #0A2540;
+            --card-bg: #102A43;
+            --text: #F4F6F8;
+            --text-muted: #9FB3C8;
+            --border: #243B53;
+            --table-header: #1F3A52;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; min-height: 100vh; margin: 0; display: flex; flex-direction: column; align-items: center; transition: all 0.3s; }
         .container { width: 100%; max-width: 900px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px 30px; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); backdrop-filter: blur(10px); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 24px 30px; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.02); border: 1px solid var(--border); }
         .brand { color: var(--primary); font-weight: 800; font-size: 22px; letter-spacing: -0.5px; }
-        .card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); padding: 40px; border: 1px solid rgba(255,255,255,0.8); }
-        .tabs { display: flex; gap: 10px; margin-bottom: 30px; background: white; padding: 6px; border-radius: 9999px; display: inline-flex; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .tab { padding: 10px 24px; border-radius: 9999px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.3s ease; font-size: 14px; }
-        .tab.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
-        .view { display: none; animation: fadeIn 0.4s ease; } .view.active { display: block; }
+        .card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 20px 25px rgba(0,0,0,0.04); padding: 40px; border: 1px solid var(--border); }
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; background: var(--table-header); padding: 6px; border-radius: 30px; display: inline-flex; border: 1px solid var(--border); }
+        .tab { padding: 10px 24px; border-radius: 20px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.2s; font-size: 14px; }
+        .tab.active { background: var(--primary); color: white; }
+        .view { display: none; animation: fadeIn 0.3s ease; } .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 16px; font-size: 14px; }
         th, td { text-align: left; padding: 16px; border-bottom: 1px solid var(--border); }
-        th { background-color: #f8fafc; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
-        tr:hover td { background: #f8fafc; transition: background 0.2s; }
-        .btn-confirm { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
-        .btn-confirm:hover { background: #059669; transform: translateY(-2px); }
-        .badge { padding: 6px 12px; border-radius: 9999px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-        .badge.pending { background: #fef08a; color: #854d0e; } .badge.confirmed { background: #d1fae5; color: #065f46; }
-        input, textarea { width: 100%; padding: 16px; margin: 8px 0 24px 0; border: 1px solid var(--border); border-radius: 12px; font-family: 'Inter'; box-sizing: border-box; background: #f8fafc; outline: none; transition: border-color 0.3s; }
+        th { background-color: var(--table-header); font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        tr:hover td { background: var(--table-header); }
+        .btn-confirm { background: #00D924; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .btn-confirm:hover { opacity: 0.9; }
+        .badge { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .badge.pending { background: rgba(245,158,11,0.15); color: #f59e0b; } .badge.confirmed { background: rgba(0,217,36,0.15); color: #00D924; }
+        input, textarea { width: 100%; padding: 16px; margin: 8px 0 24px 0; border: 1px solid var(--border); border-radius: 12px; background: var(--table-header); color: var(--text); outline: none; box-sizing: border-box; }
         input:focus, textarea:focus { border-color: var(--primary); }
-        .btn-save { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; transition: all 0.3s; font-size: 16px; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; font-size: 16px; transition: all 0.2s; }
         .btn-save:hover { background: var(--primary-hover); }
-        .logout { color: #ef4444; text-decoration: none; font-weight: 600; cursor: pointer; font-size: 14px; padding: 8px 16px; border-radius: 8px; transition: background 0.2s; }
-        .logout:hover { background: #fee2e2; }
+        .logout { color: #FF2F4C; text-decoration: none; font-weight: 600; cursor: pointer; font-size: 14px; padding: 8px 16px; border-radius: 8px; background: rgba(255,47,76,0.08); }
+        .theme-btn { background: var(--table-header); color: var(--text); border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div class="brand">✨ Brainspeed Student</div>
-            <div style="display:flex; align-items:center; gap:20px;">
-                <span style="font-weight:600; color: var(--text-muted); font-size: 15px;">Welcome, <span id="studentNameDisplay" style="color: var(--text);"></span></span>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <button class="theme-btn" onclick="toggleTheme()">🌓 Mode</button>
+                <span style="font-weight:600; color: var(--text-muted); font-size: 15px;">User: <span id="studentNameDisplay" style="color: var(--text);"></span></span>
                 <a class="logout" onclick="localStorage.clear(); window.location.href='/'">Sign Out</a>
             </div>
         </div>
@@ -52,7 +72,7 @@
 
         <div class="card">
             <div id="lessons-view" class="view active">
-                <h2 style="margin-top:0; font-weight:800; font-size: 24px;">Lesson Approvals</h2>
+                <h2 style="margin-bottom:20px; font-weight:800; font-size: 22px;">Lesson Approvals</h2>
                 <div style="overflow-x: auto; border: 1px solid var(--border); border-radius: 12px;">
                     <table>
                         <thead><tr><th>Date</th><th>Educator</th><th>Subject Taught</th><th>Logged Hrs</th><th>Clearance</th><th>Action</th></tr></thead>
@@ -62,12 +82,12 @@
             </div>
 
             <div id="profile-view" class="view">
-                <h2 style="margin-top:0; font-weight:800; font-size: 24px;">Academic Information</h2>
+                <h2 style="margin-bottom:20px; font-weight:800; font-size: 22px;">Academic Information</h2>
                 <label style="font-weight:600; font-size:13px; color:var(--text-muted); text-transform:uppercase;">Current Grade / Level</label>
-                <input type="text" id="classLevel" placeholder="e.g., SSS 3, Year 10, Grade 12">
+                <input type="text" id="classLevel" placeholder="e.g., SSS 3, Year 10">
 
                 <label style="font-weight:600; font-size:13px; color:var(--text-muted); text-transform:uppercase;">Registered Coursework</label>
-                <textarea id="subjects" rows="4" placeholder="Detail your active subjects..."></textarea>
+                <textarea id="subjects" rows="4" placeholder="Detail active subjects..."></textarea>
 
                 <button class="btn-save" onclick="saveProfile()">💾 Synchronize Profile</button>
             </div>
@@ -78,6 +98,14 @@
         const studentId = localStorage.getItem('user_id');
         if(!studentId) window.location.href = '/';
         document.getElementById('studentNameDisplay').innerText = localStorage.getItem('username').toUpperCase();
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('student-theme', target);
+        }
+        if(localStorage.getItem('student-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 
         function switchTab(viewId, el) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -90,8 +118,8 @@
             const sessions = await res.json();
             const tbody = document.getElementById('studentTableBody'); tbody.innerHTML = '';
             sessions.forEach(s => {
-                const actionBtn = s.status === 'Pending' ? `<button class="btn-confirm" onclick="confirmSession(${s.id})">Approve</button>` : `<span style="color:#10b981; font-weight:700; background:#dcfce3; padding:6px 12px; border-radius:8px;">✓ Verified</span>`;
-                tbody.innerHTML += `<tr><td style="font-weight:500;">${s.session_date || '-'}</td><td style="color:var(--primary); font-weight:600;">${s.teacher_name}</td><td>${s.subject}</td><td><strong style="background:#f1f5f9; padding:4px 8px; border-radius:4px;">${s.hours}</strong></td><td><span class="badge ${s.status.toLowerCase()}">${s.status}</span></td><td>${actionBtn}</td></tr>`;
+                const actionBtn = s.status === 'Pending' ? `<button class="btn-confirm" onclick="confirmSession(${s.id})">Approve</button>` : `<span style="color:#00D924; font-weight:700; background:rgba(0,217,36,0.08); padding:6px 12px; border-radius:6px;">✓ Verified</span>`;
+                tbody.innerHTML += `<tr><td style="font-weight:500;">${s.session_date || '-'}</td><td style="color:var(--primary); font-weight:600;">${s.teacher_name}</td><td>${s.subject}</td><td><strong style="background:var(--table-header); padding:4px 8px; border-radius:4px;">${s.hours}</strong></td><td><span class="badge ${s.status.toLowerCase()}">${s.status}</span></td><td>${actionBtn}</td></tr>`;
             });
         }
 
@@ -115,3 +143,4 @@
     </script>
 </body>
 </html>
+

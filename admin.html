@@ -5,43 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin HQ | Brainspeed International</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        :root { --primary: #0f172a; --accent: #4f46e5; --bg: #f1f5f9; --text: #0f172a; --text-muted: #64748b; --border: #e2e8f0; --card-bg: #ffffff; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2vw; max-width: 1400px; margin: 0 auto; }
-        .card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); padding: 40px; margin-bottom: 24px; border: 1px solid white; }
-        .brand { color: var(--primary); font-weight: 800; font-size: 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 30px; letter-spacing: -0.5px; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; background: #f8fafc; padding: 8px; border-radius: 12px; }
-        .tab { padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.3s; font-size: 14px; }
-        .tab.active { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .view { display: none; animation: fadeIn 0.3s; } .view.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; font-size: 14px; }
-        th, td { text-align: left; padding: 16px 12px; border-bottom: 1px solid var(--border); }
-        th { background: #f8fafc; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; position: sticky; top: 0; }
-        tr:hover td { background: #f8fafc; }
-        button { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Inter'; transition: all 0.2s; font-size: 13px; }
-        button:active { transform: scale(0.95); }
-        .btn-blue { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); } .btn-blue:hover { background: #4338ca; }
-        .btn-green { background: #10b981; color: white; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); } .btn-green:hover { background: #059669; }
-        .btn-red { background: #ef4444; color: white; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); } .btn-red:hover { background: #dc2626; }
-        input, select { padding: 14px; margin-right: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; background: #f8fafc; outline: none; transition: border-color 0.2s; }
-        input:focus, select:focus { border-color: var(--accent); }
-        #map { height: 550px; width: 100%; border-radius: 16px; z-index: 1; border: 2px solid var(--border); }
-        .directory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-top: 20px; }
-        .profile-card { border: 1px solid var(--border); padding: 24px; border-radius: 16px; background: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: transform 0.3s, box-shadow 0.3s; }
-        .profile-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
-        .role-badge { display: inline-block; padding: 6px 12px; border-radius: 9999px; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; }
-        .role-student { background: #e0e7ff; color: #3730a3; } .role-teacher { background: #dcfce3; color: #166534; }
-        .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        :root {
+            --primary: #635BFF;
+            --primary-hover: #0A2540;
+            --accent: #635BFF;
+            --bg: #F6F9FC;
+            --card-bg: #FFFFFF;
+            --text: #1A1F36;
+            --text-muted: #4F566B;
+            --border: #E3E8EE;
+            --table-header: #FAFAFA;
+            --shadow: rgba(50, 50, 93, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --primary: #7770FF;
+            --primary-hover: #FFFFFF;
+            --accent: #7770FF;
+            --bg: #0A2540;
+            --card-bg: #102A43;
+            --text: #F4F6F8;
+            --text-muted: #9FB3C8;
+            --border: #243B53;
+            --table-header: #1F3A52;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 40px 20px; max-width: 1400px; margin: 0 auto; transition: background 0.3s, color 0.3s; }
         
+        .card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 15px 35px var(--shadow), 0 5px 15px rgba(0,0,0,0.03); padding: 40px; margin-bottom: 24px; border: 1px solid var(--border); }
+        
+        .brand { color: var(--text); font-weight: 800; font-size: 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 30px; letter-spacing: -0.5px; }
+        
+        .nav-controls { display: flex; gap: 15px; align-items: center; }
+        
+        .theme-toggle { background: var(--border); color: var(--text); border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; background: var(--table-header); padding: 8px; border-radius: 12px; border: 1px solid var(--border); }
+        .tab { padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.2s; font-size: 14px; }
+        .tab.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(50,50,93,0.11); }
+        
+        .view { display: none; animation: fadeIn 0.3s ease; } 
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; font-size: 14px; color: var(--text); }
+        th, td { text-align: left; padding: 16px 12px; border-bottom: 1px solid var(--border); }
+        th { background: var(--table-header); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; position: sticky; top: 0; }
+        tr:hover td { background: var(--table-header); }
+        
+        button { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; font-size: 13px; }
+        button:active { transform: scale(0.97); }
+        
+        .btn-blue { background: var(--accent); color: white; box-shadow: 0 4px 6px rgba(50,50,93,0.11); }
+        .btn-blue:hover { opacity: 0.9; }
+        .btn-green { background: #00D924; color: white; }
+        .btn-red { background: #FF2F4C; color: white; }
+        
+        input, select { padding: 14px; margin-right: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); outline: none; transition: all 0.2s; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 91, 255, 0.15); }
+        
+        #map { height: 550px; width: 100%; border-radius: 16px; z-index: 1; border: 1px solid var(--border); }
+        .directory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-top: 20px; }
+        .profile-card { border: 1px solid var(--border); padding: 24px; border-radius: 16px; background: var(--card-bg); box-shadow: 0 4px 6px var(--shadow); transition: all 0.2s; }
+        .profile-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px var(--shadow); }
+        
+        .role-badge { display: inline-block; padding: 6px 12px; border-radius: 9999px; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; }
+        .role-student { background: #e0e7ff; color: #3730a3; } 
+        .role-teacher { background: #dcfce3; color: #166534; }
+
         @media print {
             body * { visibility: hidden; }
             #printableArea, #printableArea * { visibility: visible; }
-            #printableArea { position: absolute; left: 0; top: 0; width: 100%; padding: 40px; }
+            #printableArea { position: absolute; left: 0; top: 0; width: 100%; padding: 40px; color: black !important; background: white !important; }
             .no-print { display: none !important; }
-            .brand { border: none; font-size: 36px; justify-content: center; }
         }
     </style>
 </head>
@@ -49,7 +90,10 @@
     <div class="card no-print">
         <div class="brand">
             <span>✨ Brainspeed Admin Console</span>
-            <a href="#" onclick="localStorage.clear(); window.location.href='/'" style="color:#ef4444; font-size:15px; font-weight:600; text-decoration:none; background: #fee2e2; padding: 8px 16px; border-radius: 8px;">System Terminate</a>
+            <div class="nav-controls">
+                <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Mode</button>
+                <a href="#" onclick="localStorage.clear(); window.location.href='/'" style="color:#FF2F4C; font-size:14px; font-weight:600; text-decoration:none; background: rgba(255,47,76,0.1); padding: 8px 16px; border-radius: 8px;">System Terminate</a>
+            </div>
         </div>
 
         <div class="tabs">
@@ -69,15 +113,15 @@
         </div>
 
         <div id="map-view" class="view">
-            <h2 style="margin-top:0; font-weight:800; font-size: 20px;">Live Operations Topography</h2>
-            <p style="color: var(--text-muted); margin-top:0; font-size: 14px; margin-bottom:20px;">Monitoring active physical coordinates logged by operative personnel.</p>
+            <h2 style="margin-bottom:10px; font-weight:800; font-size: 20px;">Live Operations Topography</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom:20px;">Monitoring active physical coordinates logged by operative personnel.</p>
             <div id="map"></div>
         </div>
 
         <div id="finance-view" class="view">
             <div style="display:flex; gap: 24px; flex-wrap: wrap;">
-                <div style="flex:1; min-width: 300px; border: 1px solid var(--border); padding: 30px; border-radius: 16px; background: #f8fafc;">
-                    <h2 style="margin-top:0; font-weight:800; font-size: 20px; margin-bottom: 20px;">Generate Financial Document</h2>
+                <div style="flex:1; min-width: 300px; border: 1px solid var(--border); padding: 30px; border-radius: 16px; background: var(--table-header);">
+                    <h2 style="margin-bottom: 20px; font-weight:800; font-size: 20px;">Generate Financial Document</h2>
                     <div style="display:flex; gap:12px; margin-bottom: 20px;">
                         <select id="userType" onchange="loadFinanceDropdown()" style="flex:1;"><option value="student">Generate Client Invoice</option><option value="teacher">Generate Payroll Statement</option></select>
                         <select id="targetUser" onchange="calculateFinance()" style="flex:2;"><option value="">-- Awaiting Selection --</option></select>
@@ -85,8 +129,8 @@
                     <label style="font-weight:600; font-size:13px; color:var(--text-muted); display:block; margin-bottom:8px; text-transform:uppercase;">Appraisal Rate (₦ / Hour):</label>
                     <input type="number" id="rateInput" value="5000" oninput="calculateFinance()" style="width:100%; margin-bottom:24px; box-sizing:border-box;">
 
-                    <div id="financeResult" style="padding: 24px; background:white; border-radius:12px; display:none; border: 1px solid var(--border); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);">
-                        <h4 style="margin-top:0; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Ledger Summary</h4>
+                    <div id="financeResult" style="padding: 24px; background: var(--card-bg); border-radius:12px; display:none; border: 1px solid var(--border); box-shadow: 0 10px 15px var(--shadow);">
+                        <h4 style="margin-top:0; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-size:12px;">Ledger Summary</h4>
                         <p style="margin:8px 0; font-weight:500;">Pending Operations: <strong id="sumSessions" style="color:var(--text);">0</strong></p>
                         <p style="margin:8px 0; font-weight:500;">Calculated Workload: <strong id="sumHours" style="color:var(--text);">0</strong> hrs</p>
                         <p style="font-size: 32px; color: var(--accent); font-weight:800; margin: 20px 0; letter-spacing:-1px;">₦<span id="sumAmount">0</span></p>
@@ -94,7 +138,7 @@
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
                             <button class="btn-blue" onclick="window.print()">Export PDF</button>
                             <button class="btn-green" onclick="shareWhatsApp()">Dispatch WhatsApp</button>
-                            <button class="btn-blue" style="background:#0f172a;" onclick="shareEmail()">Secure Email</button>
+                            <button class="btn-blue" style="background:#0A2540;" onclick="shareEmail()">Secure Email</button>
                         </div>
                         <div id="markPaidContainer" style="margin-top:20px;"></div>
                     </div>
@@ -103,40 +147,50 @@
         </div>
 
         <div id="directory-view" class="view">
-            <h2 style="margin-top:0; font-weight:800; font-size: 20px;">Global Personnel Database</h2>
+            <h2 style="margin-bottom: 20px; font-weight:800; font-size: 20px;">Global Personnel Database</h2>
             <div class="directory-grid" id="directoryGrid"></div>
         </div>
     </div>
 
-    <div id="printableArea" style="display:none; background:white; color: black !important;">
-        <h1 class="brand" style="text-align:center; color:#0f172a !important; margin-bottom:5px; font-weight:800;">Brainspeed International</h1>
-        <h3 id="docTitle" style="text-align:center; color:#64748b !important; margin-top:0; font-weight:500;">Official Financial Document</h3>
+    <div id="printableArea" style="display:none;">
+        <h1 style="text-align:center; color:#0f172a; font-weight:800; margin-bottom:5px;">Brainspeed International</h1>
+        <h3 id="docTitle" style="text-align:center; color:#64748b; margin-top:0; font-weight:500;">Official Financial Document</h3>
         <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:30px; font-size: 16px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:30px; font-size: 16px; color:#0f172a;">
             <div><p><strong>Issued To:</strong> <br><span id="printName" style="font-size:20px; font-weight:800;"></span></p></div>
             <div style="text-align:right;">
                 <p><strong>Issuance Date:</strong> <span id="printDate"></span></p>
                 <p><strong>Contract Rate:</strong> ₦<span id="printRate"></span> / hr</p>
             </div>
         </div>
-        <table style="width:100%; border-collapse: collapse; margin-top:20px;">
-            <thead style="background:#f8fafc !important; border-bottom: 2px solid #cbd5e1;"><tr><th style="padding:12px;">Operational Date</th><th style="padding:12px;">Subject Category</th><th style="padding:12px;">Logged Hrs</th><th style="padding:12px;">Billable Hrs</th></tr></thead>
+        <table style="width:100%; border-collapse: collapse; margin-top:20px; color:#0f172a;">
+            <thead style="background:#f8fafc !important; border-bottom: 2px solid #cbd5e1;"><tr><th style="padding:12px; color:#0f172a;">Operational Date</th><th style="padding:12px; color:#0f172a;">Subject Category</th><th style="padding:12px; color:#0f172a;">Logged Hrs</th><th style="padding:12px; color:#0f172a;">Billable Hrs</th></tr></thead>
             <tbody id="printTableBody"></tbody>
         </table>
         <div style="text-align:right; margin-top:40px; padding-top:20px; border-top: 2px solid #cbd5e1;">
-            <p style="font-size:18px; color:#64748b !important; margin:0;">Total Remittance Due</p>
-            <h2 style="margin:5px 0 0 0; color:#0f172a !important; font-size:36px; font-weight:800;">₦<span id="printTotal"></span></h2>
+            <p style="font-size:18px; color:#64748b; margin:0;">Total Remittance Due</p>
+            <h2 style="margin:5px 0 0 0; color:#0f172a; font-size:36px; font-weight:800;">₦<span id="printTotal"></span></h2>
         </div>
-        <p style="text-align:center; margin-top:80px; font-style:italic; color:#94a3b8 !important; font-size:14px;">Authorized Document • Brainspeed International Systems</p>
+        <p style="text-align:center; margin-top:80px; font-style:italic; color:#94a3b8; font-size:14px;">Authorized Document • Brainspeed International Systems</p>
     </div>
 
     <script>
         let currentFinanceData = []; let map; let markerGroup;
 
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', targetTheme);
+            localStorage.setItem('admin-theme', targetTheme);
+        }
+        if (localStorage.getItem('admin-theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
         function initMap() {
             if (!map) {
                 map = L.map('map').setView([9.0820, 8.6753], 6);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
                 markerGroup = L.layerGroup().addTo(map);
             }
         }
@@ -152,7 +206,7 @@
             if(viewId === 'map') { initMap(); setTimeout(() => map.invalidateSize(), 200); loadAdminData(); }
         }
 
-        function formatTime(isoString) { if (!isoString) return '<span style="color:#94a3b8">Active</span>'; const date = new Date(isoString); return isNaN(date) ? isoString.split(', ')[1] || isoString : date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }
+        function formatTime(isoString) { if (!isoString) return '<span style="color:var(--text-muted)">Active</span>'; const date = new Date(isoString); return isNaN(date) ? isoString.split(', ')[1] || isoString : date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }
 
         async function loadAdminData() {
             const res = await fetch('/api/sessions'); const sessions = await res.json();
@@ -160,22 +214,22 @@
             if(markerGroup) markerGroup.clearLayers();
 
             sessions.forEach(s => {
-                const statColor = s.status === 'Confirmed' ? '#10b981' : (s.status === 'Completed' ? '#3b82f6' : '#f59e0b');
-                const payColor = s.payment_status === 'Paid' ? '#10b981' : '#ef4444';
+                const statColor = s.status === 'Confirmed' ? '#00D924' : (s.status === 'Completed' ? '#3b82f6' : '#f59e0b');
+                const payColor = s.payment_status === 'Paid' ? '#00D924' : '#FF2F4C';
                 tbody.innerHTML += `<tr>
-                    <td style="color:#64748b; font-weight:600;">#${s.id}</td>
+                    <td style="color:var(--text-muted); font-weight:600;">#${s.id}</td>
                     <td style="font-weight:500;">${s.session_date || '-'}</td>
                     <td style="font-weight:600; color:var(--primary);">${s.teacher_name}</td>
                     <td>${s.student_name}</td>
                     <td>${formatTime(s.check_in_time)}</td><td>${formatTime(s.check_out_time)}</td>
-                    <td><strong style="background:#f1f5f9; padding:4px 8px; border-radius:4px;">${s.hours}</strong></td>
+                    <td><strong style="background:var(--table-header); padding:4px 8px; border-radius:4px;">${s.hours}</strong></td>
                     <td><span style="color:${statColor}; font-weight:600;">${s.status}</span></td>
                     <td><span style="color:${payColor}; font-weight:600;">${s.payment_status}</span></td>
                     <td><button class="btn-red" style="padding:6px 10px; font-size:11px;" onclick="fetch('/api/sessions/${s.id}',{method:'DELETE'}).then(loadAdminData)">Purge</button></td>
                 </tr>`;
 
                 if(s.lat && s.lng && s.lat !== 0 && markerGroup) {
-                    L.marker([s.lat, s.lng]).bindPopup(`<div style="font-family:Inter; padding:5px;"><strong style="color:#4f46e5; font-size:14px;">${s.teacher_name.toUpperCase()}</strong><br><span style="color:#64748b; font-size:12px;">Protocol: ${s.student_name}</span><br><span style="color:#0f172a; font-weight:600; font-size:13px;">${s.subject}</span></div>`).addTo(markerGroup);
+                    L.marker([s.lat, s.lng]).bindPopup(`<div style="font-family:Inter; padding:5px;"><strong style="color:#635BFF; font-size:14px;">${s.teacher_name.toUpperCase()}</strong><br><span style="color:#4F566B; font-size:12px;">Protocol: ${s.student_name}</span><br><span style="color:#1A1F36; font-weight:600; font-size:13px;">${s.subject}</span></div>`).addTo(markerGroup);
                 }
             });
         }
@@ -187,9 +241,9 @@
                 const isStudent = u.role === 'student'; const roleClass = isStudent ? 'role-student' : 'role-teacher';
                 grid.innerHTML += `<div class="profile-card">
                     <div class="role-badge ${roleClass}">${u.role}</div>
-                    <h3 style="margin: 0 0 10px 0; font-size:18px;">${u.username.toUpperCase()}</h3>
+                    <h3 style="margin-bottom: 10px; font-size:18px;">${u.username.toUpperCase()}</h3>
                     <p style="font-size:13px; color:var(--text-muted); margin:5px 0;"><strong>${isStudent ? 'Designation' : 'Core Expertise'}:</strong> ${isStudent ? u.class_level : u.subjects}</p>
-                    <button class="btn-red" style="width:100%; margin-top:20px; background:#f87171;" onclick="deleteUser(${u.id})">Revoke Clearance</button>
+                    <button class="btn-red" style="width:100%; margin-top:20px; opacity:0.85;" onclick="deleteUser(${u.id})">Revoke Clearance</button>
                 </div>`;
             });
         }
@@ -231,4 +285,6 @@
 
         loadAdminData();
     </script>
-</body></html>
+</body>
+</html>
+

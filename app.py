@@ -2,12 +2,13 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS  # <--- 1. ADD THIS IMPORT
 from dotenv import load_dotenv
 
-# Load environment variables from the .env file (perfect for local testing)
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app) 
 
 # Fetch the DB URL from the environment (Render or .env)
 DB_URL = os.environ.get("DATABASE_URL")
